@@ -1,36 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mark Sheet</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&display=swap');
-        body { font-family: 'Manjari', sans-serif; background-color: #eef2f3; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; border-top: 8px solid #1a73e8; }
-        h2 { color: #1a73e8; margin-bottom: 5px; }
-        #examTitleDisplay { background: #fff3cd; color: #856404; display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-bottom: 20px; border: 1px solid #ffeeba; }
-        .info-box { text-align: left; border: 2px solid #f0f0f0; border-radius: 12px; overflow: hidden; }
-        .header { background-color: #f8f9fa; padding: 15px; border-bottom: 2px solid #f0f0f0; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 10px 15px; border-bottom: 1px solid #eee; }
-        .val { font-weight: bold; text-align: right; color: #1a73e8; }
-        .total { background: #1a73e8; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; }
-        .btns { margin-top: 25px; display: flex; gap: 10px; justify-content: center; }
-        .btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; border: none; cursor: pointer; color: white; }
-        @media print { .btns { display: none; } }
-    </style>
-</head>
-<body>
-<div class="card">
-    <h2 id="schoolName">MEMS TRIKARIPUR</h2>
-    <div id="examTitleDisplay">Searching...</div>
-    <div id="res"></div>
-    <div class="btns">
-        <a href="index.html" class="btn" style="background: #6c757d;">Back</a>
-        <button onclick="window.print()" class="btn" style="background: #28a745;">Print</button>
-    </div>
-</div>
 <script>
     const sheetID = '1VHdwmJ8HI1RU2KcCEZqpLaVt9Ainirp-FPfa8z9gm6s';
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv`;
@@ -42,7 +9,9 @@
     fetch(url).then(r => r.text()).then(data => {
         const rows = data.split(/\r?\n/).map(r => r.split(','));
         const headers = rows[0];
-        document.getElementById('examTitleDisplay').innerText = headers[10] || "EXAM RESULT";
+        
+        // ഇവിടെ മാറ്റം വരുത്തി: headers[10] എന്നതിന് പകരം പരീക്ഷയുടെ പേര് നൽകുക
+        document.getElementById('examTitleDisplay').innerText = headers[10] || "ANNUAL EXAMINATION-2025-26";
 
         const s = rows.slice(1).find(r => {
             const sRoll = r[0] ? r[0].trim() : "";
@@ -53,21 +22,25 @@
 
         if (s) {
             let h = `<div class="info-box"><div class="header"><strong>Name:</strong> ${s[1]}<br><strong>Class:</strong> ${s[2]}</div><table>`;
-            let total = "";
+            let total = "0"; // ടോട്ടൽ കാണിക്കാൻ
+            
             for (let i = 3; i < headers.length; i++) {
-                const head = headers[i] ? headers[i].trim() : "";
+                const head = headers[i] ? headers[i].trim().toUpperCase() : "";
                 const val = s[i] ? s[i].trim() : "";
-                if (head === "Total" || head === "ആകെ") { total = val; } 
+                
+                // TOTAL എന്നോ ആകെ എന്നോ ഉള്ള കോളം കണ്ടെത്തി അത് മാത്രം ടോട്ടൽ ആയി സെറ്റ് ചെയ്യുന്നു
+                if (head === "TOTAL" || head === "ആകെ") { 
+                    total = val; 
+                    h += `<tr><td><strong>TOTAL</strong></td><td class="val"><strong>${val}</strong></td></tr>`;
+                } 
                 else if (head && i < 10 && val !== "" && val !== "-") { 
-                    h += `<tr><td>${head}</td><td class="val">${val}</td></tr>`;
+                    h += `<tr><td>${headers[i]}</td><td class="val">${val}</td></tr>`;
                 }
             }
-            h += `</table><div class="total"><span>Total Mark</span><span>${total}</span></div></div>`;
+            h += `</table><div class="total"><span>Result</span><span>PASS</span></div></div>`;
             document.getElementById('res').innerHTML = h;
         } else {
             document.getElementById('res').innerHTML = "<p style='color:red;'>Result not found. Please check your Admission Number, Class, and Division.</p>";
         }
     });
 </script>
-</body>
-</html>
