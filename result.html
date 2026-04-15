@@ -1,7 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Sheet</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manjari:wght@400;700&display=swap');
+        body { font-family: 'Manjari', sans-serif; background-color: #eef2f3; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; border-top: 8px solid #1a73e8; }
+        h2 { color: #1a73e8; margin-bottom: 5px; }
+        #examTitleDisplay { background: #fff3cd; color: #856404; display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-bottom: 20px; border: 1px solid #ffeeba; }
+        .info-box { text-align: left; border: 2px solid #f0f0f0; border-radius: 12px; overflow: hidden; }
+        .header { background-color: #f8f9fa; padding: 15px; border-bottom: 2px solid #f0f0f0; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 10px 15px; border-bottom: 1px solid #eee; }
+        .val { font-weight: bold; text-align: right; color: #1a73e8; }
+        .total { background: #1a73e8; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; }
+        .btns { margin-top: 25px; display: flex; gap: 10px; justify-content: center; }
+        .btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; border: none; cursor: pointer; color: white; }
+        @media print { .btns { display: none; } }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2 id="schoolName">MEMS TRIKARIPUR</h2>
+    <div id="examTitleDisplay">Searching...</div>
+    <div id="res"></div>
+    <div class="btns">
+        <a href="index.html" class="btn" style="background: #6c757d;">Back</a>
+        <button onclick="window.print()" class="btn" style="background: #28a745;">Print</button>
+    </div>
+</div>
 <script>
     const sheetID = '1VHdwmJ8HI1RU2KcCEZqpLaVt9Ainirp-FPfa8z9gm6s';
-    // പബ്ലിഷ് ചെയ്യാതെ തന്നെ ഡാറ്റ എടുക്കാനുള്ള ലിങ്ക്
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv`;
+    // ഇതിൽ മാറ്റം വരുത്തി - ഗൂഗിൾ ഷീറ്റിൽ നിന്നുള്ള കൃത്യമായ ലിങ്ക്
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
     
     const params = new URLSearchParams(window.location.search);
     const roll = params.get('rollNo') ? params.get('rollNo').trim() : "";
@@ -9,18 +42,11 @@
     const uDiv = params.get('div') ? params.get('div').trim() : "";
 
     fetch(url).then(r => r.text()).then(data => {
-        // ഡാറ്റയെ വരികളായി തിരിക്കുന്നു
         const rows = data.split(/\r?\n/).map(r => r.split(',').map(c => c.replace(/^"|"$/g, '')));
         const headers = rows[0];
-        
         document.getElementById('examTitleDisplay').innerText = "ANNUAL EXAMINATION 2025-26";
 
-        const s = rows.slice(1).find(r => {
-            const sRoll = r[0] ? r[0].trim() : "";
-            const sClass = r[2] ? r[2].trim().toUpperCase() : "";
-            // അഡ്മിഷൻ നമ്പറും ക്ലാസ്സും ഒത്തുനോക്കുന്നു
-            return sRoll === roll && sClass.includes(uClass) && sClass.includes(uDiv);
-        });
+        const s = rows.find(r => r[0] && r[0].trim() === roll);
 
         if (s) {
             let h = `<div class="info-box"><div class="header"><strong>Name:</strong> ${s[1]}<br><strong>Class:</strong> ${s[2]}</div><table>`;
@@ -31,7 +57,6 @@
                 const val = s[i] ? s[i].trim() : "";
                 
                 if (head && val !== "" && val !== "-") {
-                    // TOTAL അല്ലെങ്കിൽ ആകെ എന്ന് കണ്ടാൽ അത് താഴെ കാണിക്കാൻ മാറ്റുന്നു
                     if (head.toUpperCase().includes("TOTAL") || head.includes("ആകെ")) {
                         totalVal = val;
                     } else {
@@ -39,7 +64,6 @@
                     }
                 }
             }
-            
             h += `</table>`;
             if (totalVal !== "") {
                 h += `<div class="total"><span>TOTAL</span><span>${totalVal}</span></div>`;
@@ -47,9 +71,11 @@
             h += `</div>`;
             document.getElementById('res').innerHTML = h;
         } else {
-            document.getElementById('res').innerHTML = `<p style='color:red;'>റിസൾട്ട് കണ്ടെത്താനായില്ല. <br>നൽകിയ വിവരങ്ങൾ: No: ${roll}, Class: ${uClass}-${uDiv}</p>`;
+            document.getElementById('res').innerHTML = "<p style='color:red;'>Result not found. Check Roll No: " + roll + "</p>";
         }
     }).catch(err => {
-        document.getElementById('res').innerHTML = "<p style='color:red;'>ഷീറ്റുമായി ബന്ധപ്പെടാൻ സാധിക്കുന്നില്ല. ഇന്റർനെറ്റ് പരിശോധിക്കുക.</p>";
+        document.getElementById('res').innerHTML = "<p style='color:red;'>Error connecting to data. Please try again.</p>";
     });
 </script>
+</body>
+</html>
