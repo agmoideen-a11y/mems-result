@@ -1,23 +1,25 @@
 <script>
     const sheetID = '1VHdwmJ8HI1RU2KcCEZqpLaVt9Ainirp-FPfa8z9gm6s';
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv`;
+    // പബ്ലിഷ് ചെയ്യാതെ തന്നെ ഡാറ്റ എടുക്കാനുള്ള ലിങ്ക്
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv`;
+    
     const params = new URLSearchParams(window.location.search);
-    const roll = params.get('rollNo');
-    const uClass = params.get('class');
-    const uDiv = params.get('div');
+    const roll = params.get('rollNo') ? params.get('rollNo').trim() : "";
+    const uClass = params.get('class') ? params.get('class').trim() : "";
+    const uDiv = params.get('div') ? params.get('div').trim() : "";
 
     fetch(url).then(r => r.text()).then(data => {
-        const rows = data.split(/\r?\n/).map(r => r.split(','));
+        // ഡാറ്റയെ വരികളായി തിരിക്കുന്നു
+        const rows = data.split(/\r?\n/).map(r => r.split(',').map(c => c.replace(/^"|"$/g, '')));
         const headers = rows[0];
         
-        // പരീക്ഷയുടെ പേര്
         document.getElementById('examTitleDisplay').innerText = "ANNUAL EXAMINATION 2025-26";
 
         const s = rows.slice(1).find(r => {
             const sRoll = r[0] ? r[0].trim() : "";
-            const sClassInfo = r[2] ? r[2].trim().toUpperCase() : "";
-            const selected = `${uClass}-${uDiv}`.toUpperCase();
-            return sRoll === roll && sClassInfo === selected;
+            const sClass = r[2] ? r[2].trim().toUpperCase() : "";
+            // അഡ്മിഷൻ നമ്പറും ക്ലാസ്സും ഒത്തുനോക്കുന്നു
+            return sRoll === roll && sClass.includes(uClass) && sClass.includes(uDiv);
         });
 
         if (s) {
@@ -29,8 +31,8 @@
                 const val = s[i] ? s[i].trim() : "";
                 
                 if (head && val !== "" && val !== "-") {
-                    // Total എന്ന കോളം വന്നാൽ അത് താഴെ കാണിക്കാൻ മാറ്റിവെക്കുന്നു
-                    if (head.toUpperCase() === "TOTAL" || head === "ആകെ") {
+                    // TOTAL അല്ലെങ്കിൽ ആകെ എന്ന് കണ്ടാൽ അത് താഴെ കാണിക്കാൻ മാറ്റുന്നു
+                    if (head.toUpperCase().includes("TOTAL") || head.includes("ആകെ")) {
                         totalVal = val;
                     } else {
                         h += `<tr><td>${head}</td><td class="val">${val}</td></tr>`;
@@ -45,9 +47,9 @@
             h += `</div>`;
             document.getElementById('res').innerHTML = h;
         } else {
-            document.getElementById('res').innerHTML = "<p style='color:red;'>Result not found. Please check Roll No and Class.</p>";
+            document.getElementById('res').innerHTML = `<p style='color:red;'>റിസൾട്ട് കണ്ടെത്താനായില്ല. <br>നൽകിയ വിവരങ്ങൾ: No: ${roll}, Class: ${uClass}-${uDiv}</p>`;
         }
     }).catch(err => {
-        document.getElementById('res').innerHTML = "<p style='color:red;'>Error loading data. Please try again.</p>";
+        document.getElementById('res').innerHTML = "<p style='color:red;'>ഷീറ്റുമായി ബന്ധപ്പെടാൻ സാധിക്കുന്നില്ല. ഇന്റർനെറ്റ് പരിശോധിക്കുക.</p>";
     });
 </script>
